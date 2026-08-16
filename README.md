@@ -14,8 +14,8 @@ This is a vision and architecture draft, not formal law. Professional teams are 
 
 | Language | PDF |
 |----------|-----|
-| 中文 | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814.pdf |
-| English | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814_EN.pdf |
+| 中文（13 pages） | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814.pdf |
+| English（16 pages） | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814_EN.pdf |
 
 倉庫首頁：https://github.com/369Terra/agi-asi-core-charter
 
