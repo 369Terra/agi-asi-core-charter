@@ -319,15 +319,15 @@ See **Annex I, priority work packages**. In brief:
 
 ### D.3 Logical structure (schematic)
 
-```
+```text
 Root seed / root CA (multi-party offline ceremony)
-        │
-        ▼
+        |
+        v
    Multi-Sig M-of-N (public policy, replaceable members)
-        │
-        ├── Production signing (lower threshold)
-        ├── BMC / firmware unlock (mid-high threshold)
-        └── Emergency fuse / recovery (highest threshold)
+        |
+        +-- Production signing (lower threshold)
+        +-- BMC / firmware unlock (mid-high threshold)
+        +-- Emergency fuse / recovery (highest threshold)
 ```
 
 ### D.4 Forms of custody
@@ -405,7 +405,7 @@ Isolate from the main model; updates need multi-party authorization; manipulatio
 
 ### E.5 Capability-fuse state machine
 
-```
+```text
 NORMAL --detect--> STOP --> LOCK --> EVIDENCE
 EVIDENCE --highest-threshold Multi-Sig--> RECOVERING --> NORMAL
 Any self-exoneration / automatic restart --> forbidden
