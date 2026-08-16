@@ -10,10 +10,14 @@ This is a vision and architecture draft, not formal law. Professional teams are 
 
 ## Download
 
-| Language | PDF | Source |
-|----------|-----|--------|
-| 中文 | [AGI_ASI_core_charter_v0.3.4_20260814.pdf](./AGI_ASI_core_charter_v0.3.4_20260814.pdf) | [MD](./AGI_ASI_core_charter_v0.3.4_20260814.md) |
-| English | [AGI_ASI_core_charter_v0.3.4_20260814_EN.pdf](./AGI_ASI_core_charter_v0.3.4_20260814_EN.pdf) | [MD](./AGI_ASI_core_charter_v0.3.4_20260814_EN.md) |
+點這些會直接開／下載 PDF（不要點 `.md`）：
+
+| Language | PDF |
+|----------|-----|
+| 中文 | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814.pdf |
+| English | https://raw.githubusercontent.com/369Terra/agi-asi-core-charter/main/AGI_ASI_core_charter_v0.3.4_20260814_EN.pdf |
+
+倉庫首頁：https://github.com/369Terra/agi-asi-core-charter
 
 ## Co-authors
 
