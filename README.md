@@ -19,6 +19,14 @@ This is a vision and architecture draft, not formal law. Professional teams are 
 
 倉庫首頁：https://github.com/369Terra/agi-asi-core-charter
 
+## Implementation starter pack
+
+一般讀者看上面兩份 PDF 即可。
+
+要接手實作的人，另見 [`implementation/`](./implementation/)（WP2、WP3、對接說明）。皆為初稿、非生產規格。歡迎在不弱化硬約束的前提下繼續細化。
+
+General readers only need the two PDFs. Implementers: see [`implementation/`](./implementation/).
+
 ## Co-authors
 
 - MOMI
