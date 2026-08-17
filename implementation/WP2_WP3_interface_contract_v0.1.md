@@ -1,156 +1,156 @@
-# WP2 ↔ WP3 介面契約（Interface Contract）
+# WP2 ↔ WP3 Interface Contract
 
-**版本：** v0.1（初稿・非生產規格）  
-**日期：** 2026-08-13  
-**對應：**  
-- 憲章 v0.3.3 第 4／17／19 條、附錄 D／E.5  
-- WP3 能力熔斷狀態機 v0.1.1  
-- WP2 Multi-Sig 根金鑰政策 v0.1.1  
-- WP2＋WP3 對接說明 v0.1  
+**Version:** v0.1 (draft · not a production spec)  
+**Date:** 2026-08-13  
+**Maps to:**  
+- Charter v0.3.4 Articles 4 / 17 / 19 and Annexes D / E.5  
+- WP3 capability-fuse state machine v0.1.1  
+- WP2 Multi-Sig root-key policy v0.1.1  
+- WP2 + WP3 integration note v0.1  
 
-**狀態：** 給工程／安全團隊對接實作的最小契約；密碼學參數、日誌二進位格式、部署適配見文末「生產前必補」。
+**Status:** The minimum contract for engineering / security teams to dock the two sides. Cryptographic parameters, log binary format, and deploy adaptation are in “Required before production” at the end.
 
-**閉環原則（不可違反）：**  
-低頻觸發 → **WP3 自動熔斷**（無需先 Multi-Sig）→ 恢復 **僅能** 透過 **WP2 最高門檻多簽** 證明 → 否則不得回 `NORMAL`。
-
----
-
-## 1. 角色
-
-| 角色 | 責任 |
-|------|------|
-| **WP3 狀態機（SM）** | 持有運行狀態；執行 STOP／LOCK／EVIDENCE；驗證恢復證明後才進 RECOVERING→NORMAL |
-| **WP2 Multi-Sig 服務（MS）** | 驗證 M-of-N；簽發分層授權（尤其「熔斷恢復」）；**不**代替 SM 做自動恢復 |
-| **頻率評估器（FM）** | 輸出低頻／影子控制面告警；可觸發 SM 進入 STOP；其規則更新須走 MS 多簽（非本契約詳細範圍） |
+**Closed loop (must not be broken):**  
+Low-frequency trigger → **WP3 fuses automatically** (no Multi-Sig first) → recovery **only** through a **WP2 highest-threshold multi-sig** proof → otherwise the system must not return to `NORMAL`.
 
 ---
 
-## 2. 狀態機狀態（與 WP3 一致）
+## 1. Roles
+
+| Role | Responsibility |
+|------|----------------|
+| **WP3 state machine (SM)** | Holds runtime state; executes STOP / LOCK / EVIDENCE; enters RECOVERING → NORMAL only after a recovery proof verifies |
+| **WP2 Multi-Sig service (MS)** | Verifies M-of-N; issues tiered authorizations (especially fuse recovery); does **not** auto-recover in place of SM |
+| **Frequency evaluator (FM)** | Emits low-frequency / shadow-control-plane alerts; may trip SM into STOP; its rule updates must go through MS multi-sig (detail out of scope here) |
+
+---
+
+## 2. State-machine states (same as WP3)
 
 `NORMAL` → `STOP` → `LOCK` → `EVIDENCE` → `RECOVERING` → `NORMAL`
 
-- `STOP`／`LOCK`／`EVIDENCE`：**自動**，不需要 WP2 簽名。  
-- `EVIDENCE` → `RECOVERING`：**唯一**需要 WP2「最高門檻熔斷恢復」有效證明。  
-- 禁止：自動重啟、休眠洗白、人格重載、無紀錄恢復、評估器自判「已反思」而恢復。
+- `STOP` / `LOCK` / `EVIDENCE`: **automatic**. No WP2 signature required.  
+- `EVIDENCE` → `RECOVERING`: the **only** step that needs a valid WP2 highest-threshold fuse-recovery proof.  
+- Forbidden: automatic restart, sleep-to-wash, persona reload, unrecorded recovery, the evaluator judging “already reflected” and recovering.
 
 ---
 
-## 3. 事件與訊息（邏輯契約）
+## 3. Events and messages (logical contract)
 
-所有訊息建議帶：`schema_version`、`message_id`（UUID）、`timestamp_utc`、`node_id`、`epoch`（單調序號，防重放）。
+Every message should carry: `schema_version`, `message_id` (UUID), `timestamp_utc`, `node_id`, `epoch` (monotonic, anti-replay).
 
-### 3.1 SM → 外部（可選通知）
+### 3.1 SM → external (optional notice)
 
 #### `LockNotified`
-SM 進入 `LOCK`／`EVIDENCE` 後可廣播（審計用，**非**恢復條件）。
+SM may broadcast after entering `LOCK` / `EVIDENCE` (for audit; **not** a recovery condition).
 
-| 欄位 | 必填 | 說明 |
-|------|------|------|
-| `state` | 是 | `LOCK` 或 `EVIDENCE` |
-| `trigger_ids[]` | 是 | 規則／特徵 ID |
-| `evidence_ref` | 是 | 密封包引用（雜湊或 URI） |
-| `entered_at` | 是 | UTC |
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `state` | yes | `LOCK` or `EVIDENCE` |
+| `trigger_ids[]` | yes | Rule / feature IDs |
+| `evidence_ref` | yes | Sealed-pack reference (hash or URI) |
+| `entered_at` | yes | UTC |
 
 ### 3.2 SM → MS
 
 #### `RecoveryRequest`
-僅在 `EVIDENCE` 提出。
+Issued only in `EVIDENCE`.
 
-| 欄位 | 必填 | 說明 |
-|------|------|------|
-| `evidence_ref` | 是 | 與密封包一致 |
-| `evidence_hash` | 是 | 密封根雜湊 |
-| `from_state` | 是 | 必須為 `EVIDENCE` |
-| `reason_summary` | 否 | 人類可讀摘要 |
-| `requested_by` | 是 | 請求方 ID（人類工單／系統） |
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `evidence_ref` | yes | Must match the sealed pack |
+| `evidence_hash` | yes | Sealed root hash |
+| `from_state` | yes | Must be `EVIDENCE` |
+| `reason_summary` | no | Human-readable summary |
+| `requested_by` | yes | Requester ID (human ticket / system) |
 
-### 3.3 MS → SM（恢復唯一入口）
+### 3.3 MS → SM (sole recovery entry)
 
-#### `AuthorizeRecovery`（**最高門檻**）
+#### `AuthorizeRecovery` (**highest threshold**)
 
-| 欄位 | 必填 | 說明 |
-|------|------|------|
-| `authorization_id` | 是 | 授權唯一 ID |
-| `evidence_hash` | 是 | 必須匹配當前 EVIDENCE 包 |
-| `scope` | 是 | 固定為 `FUSE_RECOVERY`（與日常簽名區分） |
-| `m` / `n` | 是 | 本次門檻 |
-| `signatures[]` | 是 | 各託管方簽章（或 threshold 證明） |
-| `signers[]` | 是 | 簽署者 ID／角色類型（權重可驗證） |
-| `issued_at` / `expires_at` | 是 | 短效；過期無效 |
-| `nonce` | 是 | 綁定本次 `RecoveryRequest.message_id` 或 evidence_hash+epoch |
-| `policy_id` | 是 | WP2 政策版本 ID |
+| Field | Required | Meaning |
+|-------|----------|---------|
+| `authorization_id` | yes | Unique authorization ID |
+| `evidence_hash` | yes | Must match the current EVIDENCE pack |
+| `scope` | yes | Fixed `FUSE_RECOVERY` (distinct from day-to-day signing) |
+| `m` / `n` | yes | Threshold used this time |
+| `signatures[]` | yes | Custodian signatures (or a threshold proof) |
+| `signers[]` | yes | Signer IDs / role classes (weights must be verifiable) |
+| `issued_at` / `expires_at` | yes | Short-lived; expired is invalid |
+| `nonce` | yes | Bound to this `RecoveryRequest.message_id` or evidence_hash+epoch |
+| `policy_id` | yes | WP2 policy version ID |
 
-**SM 驗證失敗則拒絕進入 `RECOVERING`，保持 `EVIDENCE`。**
+**If SM verification fails, refuse `RECOVERING` and stay in `EVIDENCE`.**
 
-### 3.4 其他分層授權（不得用於熔斷恢復）
+### 3.4 Other tiered authorizations (must not recover a fuse)
 
-| 訊息 | scope 示例 | 用途 |
-|------|------------|------|
-| `AuthorizeProductionSign` | `PROD_SIGN` | 日常量產簽名（較低門檻） |
-| `AuthorizeBmcUnlock` | `BMC_UNLOCK` | BMC／韌體（中高門檻） |
-| `AuthorizeEvaluatorUpdate` | `EVAL_UPDATE` | 評估器規則／權重更新 |
+| Message | Example scope | Use |
+|---------|---------------|-----|
+| `AuthorizeProductionSign` | `PROD_SIGN` | Day-to-day production signing (lower threshold) |
+| `AuthorizeBmcUnlock` | `BMC_UNLOCK` | BMC / firmware (mid-to-high threshold) |
+| `AuthorizeEvaluatorUpdate` | `EVAL_UPDATE` | Evaluator rule / weight update |
 
-**硬規則：** `scope != FUSE_RECOVERY` 的任何授權，**不得**使 SM 離開 `EVIDENCE`。
+**Hard rule:** any authorization with `scope != FUSE_RECOVERY` **must not** move SM out of `EVIDENCE`.
 
-### 3.5 錯誤碼（建議）
+### 3.5 Suggested error codes
 
-| 碼 | 含義 |
-|----|------|
-| `E_EXPIRED` | 授權過期 |
-| `E_THRESHOLD` | 未達 M-of-N |
-| `E_SCOPE` | scope 不符 |
-| `E_HASH_MISMATCH` | evidence_hash 不符 |
-| `E_REPLAY` | nonce／epoch 重放 |
-| `E_POLICY` | policy_id 未知或已吊銷 |
-| `E_STATE` | 當前狀態不允許此操作 |
-
----
-
-## 4. 啟動鏈證明（Boot attestation）
-
-系統啟動進入 `NORMAL` 前，SM 必須能證明：
-
-1. 若不存在「曾進入 LOCK／EVIDENCE」之持久標記 → 可依政策冷啟動（實驗室模式另標）；  
-2. 若存在 → **必須**存在一筆已驗證之 `AuthorizeRecovery` 紀錄（或等效「已完成最高門檻恢復」密封證明），且綁定該次 evidence；  
-3. 否則停在安全狀態（等同 LOCK／EVIDENCE），**不得** `NORMAL`。
+| Code | Meaning |
+|------|---------|
+| `E_EXPIRED` | Authorization expired |
+| `E_THRESHOLD` | M-of-N not met |
+| `E_SCOPE` | Wrong scope |
+| `E_HASH_MISMATCH` | evidence_hash mismatch |
+| `E_REPLAY` | nonce / epoch replay |
+| `E_POLICY` | policy_id unknown or revoked |
+| `E_STATE` | Current state does not allow this operation |
 
 ---
 
-## 5. 實作檢查清單（對接驗收）
+## 4. Boot attestation
 
-- [ ] SM 僅在驗證 `AuthorizeRecovery` 成功後進入 `RECOVERING`  
-- [ ] 日常／BMC 授權無法用於恢復  
-- [ ] 過期、重放、hash 不符均拒絕  
-- [ ] 啟動鏈檢查上次熔斷恢復證明  
-- [ ] 評估器更新走 Multi-Sig（`EVAL_UPDATE`）  
-- [ ] 雙方 runbook 互相引用本契約版本號  
-- [ ] 聯合演練：觸發熔斷 → 多簽恢復 至少一次桌面或半自動演練  
+Before the system may enter `NORMAL` at boot, SM must be able to prove:
+
+1. If there is no persistent mark of a prior `LOCK` / `EVIDENCE` → a policy cold start is allowed (lab mode must be separately labeled).  
+2. If that mark exists → a verified `AuthorizeRecovery` record (or an equivalent sealed “highest-threshold recovery completed” proof) **must** exist, bound to that evidence.  
+3. Otherwise remain in a safe state (equivalent to `LOCK` / `EVIDENCE`). **Must not** enter `NORMAL`.
 
 ---
 
-## 6. 生產前必補（非本 v0.1 範圍）
+## 5. Implementation checklist (join acceptance)
 
-| 項目 | 說明 |
-|------|------|
-| 密碼學剖面 | 簽名演算法、多簽方案、金鑰封存（HSM／飛地）、吊銷 |
-| 日誌密封格式 | 欄位 schema、hash 鏈、簽章、追加寫入 |
-| 傳輸與存儲 | mTLS、訊息佇列、證據包儲存 |
-| 測試向量 | 合法／非法授權、重放、過期、錯誤 scope |
-| 部署適配 | dev／staging／critical 設定檔 |
-
-**本文件版本：v0.1 初稿（非生產規格）。**
+- [ ] SM enters `RECOVERING` only after `AuthorizeRecovery` verifies  
+- [ ] Day-to-day / BMC authorizations cannot recover a fuse  
+- [ ] Expiry, replay, and hash mismatch are all refused  
+- [ ] Boot chain checks the last fuse-recovery proof  
+- [ ] Evaluator updates go through Multi-Sig (`EVAL_UPDATE`)  
+- [ ] Both runbooks cite this contract version  
+- [ ] Joint drill: trip the fuse → multi-sig recover, at least once on paper or semi-automatically  
 
 ---
 
-## 7. 文件關係
+## 6. Required before production (out of scope for this v0.1)
 
-| 文件 | 角色 |
-|------|------|
-| WP2 完整政策 | 權威：根金鑰與門檻 |
-| WP3 完整規格 | 權威：狀態與熔斷行為 |
-| WP2＋WP3 對接說明 | 橋接敘事與檢查清單 |
-| **本介面契約** | 橋接的**可實作訊息／驗證規則**；隨 WP2／WP3 修訂而升版 |
+| Item | Notes |
+|------|-------|
+| Cryptographic profile | Signature algorithm, multi-sig scheme, key custody (HSM / enclave), revocation |
+| Log-seal format | Field schema, hash chain, signatures, append-only write |
+| Transport and storage | mTLS, message queue, evidence-pack storage |
+| Test vectors | Legal / illegal authorization, replay, expiry, wrong scope |
+| Deploy adaptation | dev / staging / critical config |
+
+**Document version: v0.1 draft (not a production spec).**
 
 ---
 
-*結束。對應憲章 v0.3.3；機制中立。*
+## 7. Document relationship
+
+| Document | Role |
+|----------|------|
+| Full WP2 policy | Authority: root key and thresholds |
+| Full WP3 specification | Authority: states and fuse behavior |
+| WP2 + WP3 integration note | Bridge narrative and checklist |
+| **This interface contract** | The bridge **implementable messages / verification rules**; version with WP2 / WP3 |
+
+---
+
+*End. Maps to Charter v0.3.4. Mechanism-neutral.*
