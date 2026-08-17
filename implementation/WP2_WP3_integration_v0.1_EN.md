@@ -39,7 +39,7 @@ Any path around this loop is a violation.
 ## 4. Suggested division of responsibility
 
 - **WP3 owns:** state definitions, trigger conditions, fuse actions, prohibitions, boot-chain attestation, drill items.
-- **WP2 owns:** root-key generation and custody, threshold tiers, replaceability, the offline cold-storage ceremony, signature rules for recovery authorization, public artifacts.
+- **WP2 owns:** root-key generation and custody, threshold tiers, replaceability, the offline ceremony, signature rules for recovery authorization, public artifacts.
 - **Join interface:** the signature-verification result of a recovery authorization must be readable by the WP3 state machine and must be the sole release condition.
 
 ## 5. Implementation checklist (join only)

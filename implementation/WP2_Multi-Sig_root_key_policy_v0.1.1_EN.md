@@ -23,7 +23,7 @@ This policy does not name or presuppose any particular commercial entity, politi
 2. Thresholds and member classes must be publicly verifiable (true identities may be partly masked within lawful privacy bounds; weights and role classes may not be hidden).
 3. Signature weight controlled by the same corporate group, the same government, or the same interest alliance must not by itself reach the threshold that can unilaterally pass ordinary root operations. That cap must be written in public and recomputed on a fixed cycle.
 4. Place physical custody nodes across multiple geographies / jurisdictions.
-5. The root seed / root CA must be generated and sharded in a multi-witness **offline cold-storage** ceremony (or an equivalent high-assurance offline procedure). A single cloud account or a single software **hot wallet** is **forbidden** as root. Cold wallet / offline custody is the requirement; a hot wallet is the prohibited way to hold the root, not a recommendation.
+5. The root seed / root CA must be generated and sharded in a multi-witness **offline ceremony** (or an equivalent high-assurance offline procedure). A single cloud account or a single software-held online key is **forbidden** as root.
 
 ## 4. Threshold tiers (mandatory)
 
@@ -44,10 +44,10 @@ This policy does not name or presuppose any particular commercial entity, politi
 ## 6. Offline-ceremony minimum
 
 - Root-seed generation must have multi-party physical presence (or equivalent high-assurance witness).
-- After sharding, encrypt the shares and store them in **cold storage** (offline, not hot) in different jurisdictions / geographies.
+- After sharding, encrypt the shares and store them offline in different jurisdictions / geographies.
 - A complete ceremony-record abstract (the public portion) must be retained and auditable.
 - No single subject may hold a complete backup that can restore the root alone.
-- Restated: the root is not a hot wallet. A single software hot wallet, a single cloud KMS account, or a single online seed backup must not serve as root.
+- A single cloud KMS account or a single online seed backup must not serve as root.
 
 ## 7. Mandatory dock to the capability fuse (WP3)
 
